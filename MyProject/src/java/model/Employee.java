@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package model;
 
 /**
@@ -10,7 +6,8 @@ package model;
  */
 public class Employee extends BaseModel {
     private String name;
-    private Department dept; 
+    // THAY THẾ Department bằng Division
+    private Division dept; 
     private Employee supervisor;
 
     public String getName() {
@@ -21,11 +18,13 @@ public class Employee extends BaseModel {
         this.name = name;
     }
 
-    public Department getDept() {
+    // THAY THẾ Department bằng Division
+    public Division getDept() {
         return dept;
     }
 
-    public void setDept(Department dept) {
+    // THAY THẾ Department bằng Division
+    public void setDept(Division dept) {
         this.dept = dept;
     }
 
