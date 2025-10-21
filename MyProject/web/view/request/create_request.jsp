@@ -13,7 +13,7 @@
             String roleName = user.getRoles().isEmpty() ? "N/A" : user.getRoles().get(0).getName();
         %>
 
-        
+
 
         <p>User: <%= user.getDisplayname() %>, Role: <%= roleName %>, Dep: <%= ((model.Division)user.getEmployee().getDept()).getName() %></p>
         <form action="create" method="POST">

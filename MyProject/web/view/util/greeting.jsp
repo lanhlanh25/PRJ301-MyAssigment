@@ -21,5 +21,26 @@
         <c:if test="${sessionScope.auth eq null}">
             You are not logged in yet!
         </c:if>    
+
+        <%-- Bổ sung vào greeting.jsp --%>
+        <c:if test="${sessionScope.auth ne null}">
+            ...
+            <br/>
+            <p>
+                [<a href="request/create">Tạo đơn nghỉ phép</a>]
+                [<a href="request/list">Danh sách đơn</a>]
+
+                <%-- Chỉ hiện Agenda nếu có quyền truy cập --%>
+                <c:forEach var="role" items="${sessionScope.auth.roles}">
+                    <c:forEach var="feature" items="${role.features}">
+                        <c:if test="${feature.url eq '/division/agenda'}">
+                            [<a href="division/agenda">Agenda</a>]
+                        </c:if>
+                    </c:forEach>
+                </c:forEach>
+
+                [<a href="logout">Đăng xuất</a>]
+            </p>
+        </c:if>
     </body>
 </html>

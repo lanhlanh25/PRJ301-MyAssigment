@@ -1,11 +1,6 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<%-- 
-    Giả định các thuộc tính sau đã được đặt trong Request Scope từ ReviewController:
-    ${requestScope.request}: Đối tượng RequestForLeave đầy đủ
-    ${requestScope.canReview}: Biến boolean (true nếu người dùng hiện tại có quyền duyệt)
---%>
 <!DOCTYPE html>
 <html>
     <head>
@@ -38,7 +33,7 @@
         <%-- I. HIỂN THỊ CHI TIẾT ĐƠN (Hình 6) --%>
         
         <p>Duyệt bởi User: ${sessionScope.auth.displayname}, Role: Quản lý</p>
-        <p>Tạo bởi: **${request.createdBy.name}**</p> 
+        <p>Tạo bởi: ${request.createdBy.name}</p> 
 
         <p>Từ ngày: <fmt:formatDate value="${request.fromDate}" pattern="dd/MM/yyyy"/></p>
         <p>Tới ngày: <fmt:formatDate value="${request.toDate}" pattern="dd/MM/yyyy"/></p>
