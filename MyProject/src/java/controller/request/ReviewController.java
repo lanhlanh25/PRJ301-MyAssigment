@@ -16,7 +16,23 @@ public class ReviewController extends BaseRequiredAuthorizationController {
     @Override
     protected void processPost(HttpServletRequest req, HttpServletResponse resp, User user) throws ServletException, IOException {
         int requestId = Integer.parseInt(req.getParameter("requestId"));
-        String action = req.getParameter("action"); // 'Approve' hoặc 'Reject'
+
+        // TÁI KIỂM TRA QUYỀN TRUY CẬP (Security Check)
+        RequestForLeaveDBContext dbCheck = new RequestForLeaveDBContext();
+        RequestForLeave requestToCheck = dbCheck.get(requestId);
+
+        boolean hasSupervisor = requestToCheck.getCreatedBy().getSupervisor() != null;
+        boolean isSupervisor = hasSupervisor
+                && requestToCheck.getCreatedBy().getSupervisor().getId() == user.getEmployee().getId();
+        boolean isInProgress = requestToCheck.getStatus() == 1;
+
+        if (!(isSupervisor && isInProgress)) {
+            resp.getWriter().println("Lỗi: Bạn không có quyền duyệt đơn này hoặc đơn đã được xử lý.");
+            return;
+        }
+
+        // --- Logic xử lý chính (Đã an toàn) ---
+        String action = req.getParameter("action");
         String reasonForAction = req.getParameter("reasonForAction");
         int processedBy = user.getEmployee().getId();
         int newStatus;
@@ -26,51 +42,53 @@ public class ReviewController extends BaseRequiredAuthorizationController {
         } else if ("Reject".equals(action)) {
             newStatus = 3; // Rejected
         } else {
-            resp.getWriter().println("Invalid action!");
+            resp.getWriter().println("Hành động không hợp lệ!");
             return;
         }
 
         RequestForLeaveDBContext db = new RequestForLeaveDBContext();
         db.updateStatus(requestId, newStatus, processedBy, reasonForAction);
 
-        // Chuyển hướng về List
         resp.sendRedirect("list");
     }
 // Trong ReviewController.java
-@Override
-protected void processGet(HttpServletRequest req, HttpServletResponse resp, User user) throws ServletException, IOException {
-    int requestId = Integer.parseInt(req.getParameter("id"));
-    RequestForLeaveDBContext db = new RequestForLeaveDBContext();
-    RequestForLeave request = db.get(requestId);
-    
-    if (request == null) {
-        req.setAttribute("message", "Đơn không tồn tại.");
-        req.getRequestDispatcher("/view/auth/message.jsp").forward(req, resp);
-        return;
+
+    @Override
+    protected void processGet(HttpServletRequest req, HttpServletResponse resp, User user) throws ServletException, IOException {
+        int requestId = Integer.parseInt(req.getParameter("id"));
+        RequestForLeaveDBContext db = new RequestForLeaveDBContext();
+        RequestForLeave request = db.get(requestId);
+
+        if (request == null) {
+            resp.getWriter().println("Đơn không tồn tại.");
+            return;
+        }
+
+        int currentManagerId = user.getEmployee().getId();
+
+        // --- Bắt đầu Logic Phê Duyệt Theo Cấp Bậc ---
+        // 1. Kiểm tra: Người tạo đơn phải có Supervisor (Không phải cấp cao nhất)
+        boolean hasSupervisor = request.getCreatedBy().getSupervisor() != null;
+
+        // 2. Kiểm tra: Phải là quản lý TRỰC TIẾP
+        boolean isSupervisor = false;
+        if (hasSupervisor) {
+            // ID của người duyệt (user hiện tại) phải khớp với Supervisor ID của người tạo đơn
+            isSupervisor = request.getCreatedBy().getSupervisor().getId() == currentManagerId;
+        }
+
+        // 3. Kiểm tra Trạng thái: Đơn phải ở trạng thái In progress (1)
+        boolean isInProgress = request.getStatus() == 1;
+
+        // Quyền duyệt chỉ được cấp nếu: Là quản lý trực tiếp VÀ đơn đang chờ xử lý.
+        boolean canReview = isSupervisor && isInProgress;
+
+        // Kiểm tra truy cập: Ngay cả khi không duyệt được (ví dụ đã Approved), 
+        // người dùng (nếu là quản lý) vẫn phải được xem.
+        // Logic này phải được đảm bảo bởi ListController (chỉ thấy đơn của mình và cấp dưới)
+        req.setAttribute("request", request);
+        req.setAttribute("canReview", canReview);
+
+        req.getRequestDispatcher("/view/request/review_request.jsp").forward(req, resp);
     }
-
-    int currentManagerId = user.getEmployee().getId();
-    
-    // 1. Kiểm tra quyền duyệt (Điều kiện 1: Phải là quản lý trực tiếp)
-    boolean isSupervisor = false;
-    if (request.getCreatedBy().getSupervisor() != null) {
-        // ID của người duyệt (user hiện tại) phải khớp với Supervisor ID của người tạo đơn
-        isSupervisor = request.getCreatedBy().getSupervisor().getId() == currentManagerId;
-    }
-    
-    // 2. Kiểm tra trạng thái (Điều kiện 2: Đơn phải ở trạng thái In progress).
-    boolean isInProgress = request.getStatus() == 1; 
-
-    // Biến cờ quan trọng: Chỉ có quyền xem VÀ duyệt nếu là quản lý trực tiếp VÀ đơn chưa được xử lý
-    boolean canReview = isSupervisor && isInProgress; 
-
-    // Quan trọng: Nếu không phải quản lý trực tiếp, nhưng vẫn là nhân viên trong công ty,
-    // họ vẫn có thể xem chi tiết đơn của chính mình (nếu status != In progress) 
-    // nhưng KHÔNG được phép thay đổi trạng thái.
-    
-    req.setAttribute("request", request);
-    req.setAttribute("canReview", canReview); // Dùng để ẩn/hiện nút Approve/Reject trên JSP
-    
-    req.getRequestDispatcher("/view/request/review_request.jsp").forward(req, resp);
-}
 }

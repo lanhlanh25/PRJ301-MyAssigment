@@ -1,15 +1,41 @@
 <!DOCTYPE html>
-<!--
-Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
-Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Html.html to edit this template
--->
 <html>
     <head>
-        <title>TODO supply a title</title>
+        <title>eLeave LanhLanh - Hệ thống Quản lý Nghỉ Phép</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="/MyProject/view/css/login_style.css">
     </head>
     <body>
-        <div>TODO write content</div>
+        <form action="login" method="POST">
+            <div class="login-container">
+
+                <div class="header">
+                    <div class="logo">eLeave </div> 
+                    <div class="system-title">Quản lý Đơn Nghỉ Phép</div>
+                </div>
+
+                <div class="login-form">
+                    <input type="text" name="username" placeholder="Tên đăng nhập hoặc Email" required>
+                    <input type="password" name="password" placeholder="Mật khẩu" required>
+
+                    <button type="submit" class="btn-login">ĐĂNG NHẬP</button>
+                </div>
+
+                <div class="divider">--- HOẶC ---</div>
+
+                <a href="#" class="btn-social google">Đăng nhập bằng Google</a>
+                <a href="#" class="btn-social sso">Đăng nhập bằng Tài khoản LanhLanh (SSO)</a>
+
+                <div class="utility-links">
+                    <a href="#">Quên mật khẩu?</a>
+                </div>
+
+                <div class="footer-text">
+                    &copy; 2025 Công ty LanhLanh. All Rights Reserved.
+                </div>
+
+            </div>
+        </form>
     </body>
 </html>

@@ -73,6 +73,7 @@ public class EmployeeDBContext extends DBContext<Employee> {
 
 // Phương thức mới: Lấy danh sách nhân viên theo phòng ban (Division Leader Agenda)
     public List<Employee> getEmployeesByDivision(int divisionId) {
+        
         List<Employee> employees = new ArrayList<>();
         try {
             String sql = "SELECT eid, ename FROM Employee WHERE did = ? ORDER BY ename";
@@ -94,6 +95,7 @@ public class EmployeeDBContext extends DBContext<Employee> {
             // closeConnection(); 
         }
         return employees;
+        
     }
 
     @Override
