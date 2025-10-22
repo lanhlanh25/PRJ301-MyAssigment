@@ -1,10 +1,6 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package controller.home;
 
-import controller.iam.BaseRequiredAuthenticationController;
+import controller.iam.BaseRequiredAuthorizationController;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,19 +8,20 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import model.iam.User;
 
-/**
- *
- * @author sonnt
- */
 @WebServlet(urlPatterns = "/home")
-public class HomeController extends BaseRequiredAuthenticationController {
+// BƯỚC QUAN TRỌNG: Kế thừa BaseRequiredAuthorizationController
+public class HomeController extends BaseRequiredAuthorizationController {
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp, User user) throws ServletException, IOException {
+    protected void processPost(HttpServletRequest req, HttpServletResponse resp, User user) throws ServletException, IOException {
+        // Hiện tại không cần xử lý POST cho trang home
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp, User user) throws ServletException, IOException {
+    protected void processGet(HttpServletRequest req, HttpServletResponse resp, User user) throws ServletException, IOException {
+        // Logic BaseRequiredAuthorizationController đã chạy, quyền đã được nạp vào user object.
+        
+        // CHUYỂN TIẾP NỘI BỘ đến file JSP
+        req.getRequestDispatcher("/home/home.jsp").forward(req, resp);
     }
-    
 }

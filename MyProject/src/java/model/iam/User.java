@@ -1,48 +1,23 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package model.iam;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import model.BaseModel;
 import model.Employee;
 
-/**
- *
- * @author sonnt
- */
 public class User extends BaseModel {
+
     private String username;
     private String password;
     private String displayname;
     private Employee employee;
     private ArrayList<Role> roles = new ArrayList<>();
 
-    public String getUsername() {
-        return username;
-    }
+    // BỔ SUNG: Map lưu trữ các URL mà User có quyền truy cập
+    private Map<String, Boolean> authorizedFeatures = new HashMap<>();
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getDisplayname() {
-        return displayname;
-    }
-
-    public void setDisplayname(String displayname) {
-        this.displayname = displayname;
-    }
-
+    // ... (Các Getter/Setter khác) ...
     public Employee getEmployee() {
         return employee;
     }
@@ -58,5 +33,26 @@ public class User extends BaseModel {
     public void setRoles(ArrayList<Role> roles) {
         this.roles = roles;
     }
-    
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setDisplayname(String displayname) {
+        this.displayname = displayname;
+    }
+// ... (và các phương thức set khác: setId, setEmployee, v.v.)
+
+    // Getter/Setter cho Authorized Features
+    public String getDisplayname() {
+        return displayname;
+    }
+
+    public Map<String, Boolean> getAuthorizedFeatures() {
+        return authorizedFeatures;
+    }
+
+    public void setAuthorizedFeatures(Map<String, Boolean> authorizedFeatures) {
+        this.authorizedFeatures = authorizedFeatures;
+    }
 }

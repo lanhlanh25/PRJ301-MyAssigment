@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package controller.iam;
 
 import dal.UserDBContext;
@@ -14,33 +10,27 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import model.iam.User;
 
-/**
- *
- * @author sonnt
- */
 @WebServlet(urlPatterns = "/login")
 public class LoginController extends HttpServlet {
+
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String username = req.getParameter("username");
         String password = req.getParameter("password");
-        
-        //validation (santinization)
-        
+
         UserDBContext db = new UserDBContext();
         User u = db.get(username, password);
-        if(u!=null)
-        {
+
+        if (u != null) {
             HttpSession session = req.getSession();
             session.setAttribute("auth", u);
-            //print login successful!
-            req.setAttribute("message", "Login Successful!");
+
+            // SỬA: Chuyển hướng đến URL MAPPING /home để HomeController xử lý
+            resp.sendRedirect("home"); 
+        } else {
+            req.setAttribute("message", "Login Failed! Invalid username or password.");
+            req.getRequestDispatcher("view/auth/message.jsp").forward(req, resp);
         }
-        else
-        {
-            req.setAttribute("message", "Login Failed!");
-        }
-        req.getRequestDispatcher("view/auth/message.jsp").forward(req, resp);
     }
 
     @Override
