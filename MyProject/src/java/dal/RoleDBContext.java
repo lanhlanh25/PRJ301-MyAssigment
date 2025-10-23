@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package dal;
 
 import java.util.ArrayList;
@@ -11,47 +7,70 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import model.iam.Feature;
 
-/**
- *
- * @author sonnt
- */
 public class RoleDBContext extends DBContext<Role> {
 
-    public ArrayList<Role> getByUserId(int id) {
-
+    public ArrayList<Role> getByUserId(int uid) {
         ArrayList<Role> roles = new ArrayList<>();
 
-        try {
-            String sql = """
-                                     SELECT r.rid,r.rname,f.fid,f.url
-                                     FROM [User] u INNER JOIN [UserRole] ur ON u.uid = ur.uid
-                                     \t\t\t\t\t\tINNER JOIN [Role] r ON r.rid = ur.rid
-                                     \t\t\t\t\t\tINNER JOIN [RoleFeature] rf ON rf.rid = r.rid
-                                     \t\t\t\t\t\tINNER JOIN [Feature] f ON f.fid = rf.fid
-                                     \t\t\t\t\t\tWHERE u.uid = ?""";
+        String sql = """
+            SELECT 
+                r.rid, r.rname, f.fid, f.url
+            FROM [User] u 
+            INNER JOIN [UserRole] ur ON u.uid = ur.uid
+            INNER JOIN [Role] r ON r.rid = ur.rid
+            LEFT JOIN [RoleFeature] rf ON rf.rid = r.rid
+            LEFT JOIN [Feature] f ON f.fid = rf.fid
+            WHERE u.uid = ?
+            ORDER BY r.rid
+        """;
 
-            PreparedStatement stm = connection.prepareStatement(sql);
-            stm.setInt(1, id);
+        try (PreparedStatement stm = connection.prepareStatement(sql)) {
+            stm.setInt(1, uid);
             ResultSet rs = stm.executeQuery();
-            
-            Role current = new Role();
-            current.setId(-1);
-            while(rs.next())
-            {
+
+            Role current = null;
+            int lastRoleId = -1;
+
+            while (rs.next()) {
                 int rid = rs.getInt("rid");
-                if(rid != current.getId())
-                {
+                if (rid != lastRoleId) {
                     current = new Role();
-                    current.setId(id);
+                    current.setId(rid);
                     current.setName(rs.getString("rname"));
                     roles.add(current);
+                    lastRoleId = rid;
                 }
-                Feature f = new Feature();
-                f.setId(rs.getInt("fid"));
-                f.setUrl(rs.getString("url"));
-                current.getFeatures().add(f);
+
+                int fid = rs.getInt("fid");
+                if (!rs.wasNull()) {
+                    Feature f = new Feature();
+                    f.setId(fid);
+                    f.setUrl(rs.getString("url"));
+                    current.getFeatures().add(f);
+                }
             }
-            
+
+        } catch (SQLException ex) {
+            Logger.getLogger(RoleDBContext.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            closeConnection();
+        }
+
+        return roles;
+    }
+
+    @Override
+    public ArrayList<Role> list() {
+        ArrayList<Role> roles = new ArrayList<>();
+        String sql = "SELECT rid, rname FROM [Role]";
+        try (PreparedStatement stm = connection.prepareStatement(sql);
+             ResultSet rs = stm.executeQuery()) {
+            while (rs.next()) {
+                Role r = new Role();
+                r.setId(rs.getInt("rid"));
+                r.setName(rs.getString("rname"));
+                roles.add(r);
+            }
         } catch (SQLException ex) {
             Logger.getLogger(RoleDBContext.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
@@ -61,28 +80,62 @@ public class RoleDBContext extends DBContext<Role> {
     }
 
     @Override
-    public ArrayList<Role> list() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
-
-    @Override
     public Role get(int id) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        Role r = null;
+        String sql = "SELECT rid, rname FROM [Role] WHERE rid = ?";
+        try (PreparedStatement stm = connection.prepareStatement(sql)) {
+            stm.setInt(1, id);
+            ResultSet rs = stm.executeQuery();
+            if (rs.next()) {
+                r = new Role();
+                r.setId(rs.getInt("rid"));
+                r.setName(rs.getString("rname"));
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(RoleDBContext.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            closeConnection();
+        }
+        return r;
     }
 
     @Override
     public void insert(Role model) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        String sql = "INSERT INTO [Role](rname) VALUES(?)";
+        try (PreparedStatement stm = connection.prepareStatement(sql)) {
+            stm.setString(1, model.getName());
+            stm.executeUpdate();
+        } catch (SQLException ex) {
+            Logger.getLogger(RoleDBContext.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            closeConnection();
+        }
     }
 
     @Override
     public void update(Role model) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        String sql = "UPDATE [Role] SET rname = ? WHERE rid = ?";
+        try (PreparedStatement stm = connection.prepareStatement(sql)) {
+            stm.setString(1, model.getName());
+            stm.setInt(2, model.getId());
+            stm.executeUpdate();
+        } catch (SQLException ex) {
+            Logger.getLogger(RoleDBContext.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            closeConnection();
+        }
     }
 
     @Override
     public void delete(Role model) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        String sql = "DELETE FROM [Role] WHERE rid = ?";
+        try (PreparedStatement stm = connection.prepareStatement(sql)) {
+            stm.setInt(1, model.getId());
+            stm.executeUpdate();
+        } catch (SQLException ex) {
+            Logger.getLogger(RoleDBContext.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            closeConnection();
+        }
     }
-
 }

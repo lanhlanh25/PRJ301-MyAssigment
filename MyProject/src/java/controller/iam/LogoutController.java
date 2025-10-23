@@ -15,6 +15,6 @@ public class LogoutController extends HttpServlet {
         // Xóa Session (Session Invalidation) hoặc xóa Attribute "auth"
         req.getSession().removeAttribute("auth");
         // Chuyển hướng về trang đăng nhập
-        resp.sendRedirect("login"); 
+        resp.sendRedirect("index.html"); 
     }
 }

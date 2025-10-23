@@ -20,45 +20,58 @@ import model.iam.User;
 public class ViewAgendaController extends BaseRequiredAuthorizationController {
 
     @Override
-    protected void processPost(HttpServletRequest req, HttpServletResponse resp, User user) throws ServletException, IOException {
+    protected void processPost(HttpServletRequest req, HttpServletResponse resp, User user)
+            throws ServletException, IOException {
+        // Trang này chỉ dùng GET → redirect nếu POST
+        resp.sendRedirect(req.getContextPath() + "/division/agenda");
     }
 
     @Override
-    protected void processGet(HttpServletRequest req, HttpServletResponse resp, User user) throws ServletException, IOException {
-        
-        // 1. Lấy Division ID của người dùng hiện tại (LỖI ĐÃ ĐƯỢC FIX CÚ PHÁP)
-        // user.getEmployee().getDept().getId() sẽ hoạt động sau khi các lỗi cú pháp trước đó được sửa
-        int divisionId = user.getEmployee().getDept().getId(); 
-        
-        // 2. Xử lý khoảng thời gian (from/to)
+    protected void processGet(HttpServletRequest req, HttpServletResponse resp, User user)
+            throws ServletException, IOException {
+
+        // ✅ 1. Lấy Division ID của người dùng hiện tại
+        int divisionId = user.getEmployee().getDept().getId();
+
+        // ✅ 2. Xử lý khoảng thời gian (from/to)
         Date from;
         Date to;
-        
         try {
-            from = Date.valueOf(req.getParameter("from"));
-            to = Date.valueOf(req.getParameter("to"));
+            String fromParam = req.getParameter("from");
+            String toParam = req.getParameter("to");
+
+            if (fromParam != null && toParam != null) {
+                from = Date.valueOf(fromParam);
+                to = Date.valueOf(toParam);
+            } else {
+                // Mặc định: Từ hôm nay → 7 ngày sau
+                Calendar cal = Calendar.getInstance();
+                from = new Date(cal.getTimeInMillis());
+                cal.add(Calendar.DAY_OF_YEAR, 7);
+                to = new Date(cal.getTimeInMillis());
+            }
         } catch (Exception e) {
-            // Mặc định: Từ ngày hiện tại đến 7 ngày sau
             Calendar cal = Calendar.getInstance();
             from = new Date(cal.getTimeInMillis());
             cal.add(Calendar.DAY_OF_YEAR, 7);
             to = new Date(cal.getTimeInMillis());
         }
 
-        // 3. Lấy danh sách nhân viên trong phòng ban
+        // ✅ 3. Lấy danh sách nhân viên trong phòng ban
         EmployeeDBContext empDB = new EmployeeDBContext();
-        List<Employee> allEmployees = empDB.getEmployeesByDivision(divisionId); 
+        List<Employee> allEmployees = empDB.listByDivision(divisionId);  // <-- sửa tại đây
 
-        // 4. Lấy danh sách các đơn nghỉ phép đã Approved
+        // ✅ 4. Lấy danh sách các đơn nghỉ phép đã duyệt
         RequestForLeaveDBContext reqDB = new RequestForLeaveDBContext();
         ArrayList<RequestForLeave> approvedLeaves = reqDB.getLeaveDays(divisionId, from, to);
-        
-        // 5. Set Attribute và Forward
+
+        // ✅ 5. Truyền dữ liệu sang JSP
         req.setAttribute("from", from);
         req.setAttribute("to", to);
         req.setAttribute("employees", allEmployees);
         req.setAttribute("approvedLeaves", approvedLeaves);
-        
+
+        // ✅ 6. Hiển thị giao diện
         req.getRequestDispatcher("/view/division/agenda.jsp").forward(req, resp);
     }
 }
