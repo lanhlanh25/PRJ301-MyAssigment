@@ -9,12 +9,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class RequestForLeaveDBContext extends DBContext<RequestForLeave> {
-// Trong RequestForLeaveDBContext.java
 
     public ArrayList<RequestForLeave> listForEmployee(Employee employee) {
         ArrayList<RequestForLeave> requests = new ArrayList<>();
 
-        // Lấy các đơn của chính mình HOẶC (đơn của cấp dưới VÀ người dùng là quản lý trực tiếp của cấp dưới đó)
         String sql = """
                  SELECT r.* FROM RequestForLeave r
                  INNER JOIN Employee e ON r.created_by = e.eid
@@ -22,22 +20,18 @@ public class RequestForLeaveDBContext extends DBContext<RequestForLeave> {
                  OR e.supervisorid = ?
                  ORDER BY r.created_time DESC""";
 
-        // Thực hiện truy vấn, ánh xạ kết quả (ResultSet) vào ArrayList<RequestForLeave>
-        // ... (logic tương tự như phương thức get đã cung cấp)
         return requests;
     }
 
-    // Phương thức CỐT LÕI: Lọc đơn của mình HOẶC cấp dưới
     public ArrayList<RequestForLeave> listRequestsByCreatorOrSubordinates(int creatorId, List<Integer> subordinateIds) {
         ArrayList<RequestForLeave> requests = new ArrayList<>();
-        subordinateIds.add(creatorId); // Thêm ID của chính mình vào danh sách cần lọc
+        subordinateIds.add(creatorId); 
 
         String placeholder = subordinateIds.toString().replace("[", "").replace("]", "");
 
         try {
             String sql = "SELECT * FROM RequestForLeave WHERE created_by IN (" + placeholder + ") ORDER BY created_time DESC";
             PreparedStatement stm = connection.prepareStatement(sql);
-            // Không cần setParameter nếu dùng placeholder list. Nếu dùng PreparedStatemnent an toàn hơn, cần xử lý loop
             ResultSet rs = stm.executeQuery();
             EmployeeDBContext empDB = new EmployeeDBContext();
             while (rs.next()) {
@@ -50,13 +44,11 @@ public class RequestForLeaveDBContext extends DBContext<RequestForLeave> {
                 r.setStatus(rs.getInt("status"));
                 r.setReasonForAction(rs.getString("reason_for_action"));
 
-                // Set CreatedBy (chỉ cần ID/Tên đơn giản cho List)
-                r.setCreatedBy(empDB.getEmployeeFullInfo(rs.getInt("created_by")));
+                r.setCreatedBy(empDB.get(rs.getInt("created_by")));
 
-                // Set ProcessedBy
                 int processedById = rs.getInt("processed_by");
                 if (processedById != 0) {
-                    r.setProcessedBy(empDB.getEmployeeFullInfo(processedById));
+                    r.setProcessedBy(empDB.get(processedById));
                 }
 
                 requests.add(r);
@@ -69,11 +61,10 @@ public class RequestForLeaveDBContext extends DBContext<RequestForLeave> {
         return requests;
     }
 
-    // Insert đơn mới
     @Override
     public void insert(RequestForLeave model) {
         try {
-            String sql = "INSERT INTO RequestForLeave (created_by, created_time, [from], [to], reason, status) VALUES (?, GETDATE(), ?, ?, ?, 1)"; // status=1: In progress
+            String sql = "INSERT INTO RequestForLeave (created_by, created_time, [from], [to], reason, status) VALUES (?, GETDATE(), ?, ?, ?, 1)"; 
             PreparedStatement stm = connection.prepareStatement(sql);
             stm.setInt(1, model.getCreatedBy().getId());
             stm.setDate(2, model.getFromDate());
@@ -87,7 +78,6 @@ public class RequestForLeaveDBContext extends DBContext<RequestForLeave> {
         }
     }
 
-    // Cập nhật trạng thái duyệt
     public void updateStatus(int requestId, int newStatus, int processedBy, String reasonForAction) {
         try {
             String sql = "UPDATE RequestForLeave SET status = ?, processed_by = ?, processed_time = GETDATE(), reason_for_action = ? WHERE rid = ?";
@@ -110,7 +100,6 @@ public class RequestForLeaveDBContext extends DBContext<RequestForLeave> {
     }
 
     @Override
-
     public RequestForLeave get(int id) {
         try {
             String sql = "SELECT * FROM RequestForLeave WHERE rid = ?";
@@ -130,13 +119,11 @@ public class RequestForLeaveDBContext extends DBContext<RequestForLeave> {
 
                 EmployeeDBContext empDB = new EmployeeDBContext();
 
-                // Lấy người tạo
-                r.setCreatedBy(empDB.getEmployeeFullInfo(rs.getInt("created_by")));
+                r.setCreatedBy(empDB.get(rs.getInt("created_by")));
 
-                // Lấy người xử lý
                 int processedById = rs.getInt("processed_by");
                 if (processedById != 0) {
-                    r.setProcessedBy(empDB.getEmployeeFullInfo(processedById));
+                    r.setProcessedBy(empDB.get(processedById));
                 }
                 r.setProcessedTime(rs.getTimestamp("processed_time"));
 
@@ -150,18 +137,14 @@ public class RequestForLeaveDBContext extends DBContext<RequestForLeave> {
         return null;
     }
 
-// Thêm phương thức để lấy ngày nghỉ cho Agenda (Dành cho ViewAgendaController)
-// Trả về map để dễ dàng xử lý trong Controller
     public ArrayList<RequestForLeave> getLeaveDays(int divisionId, Date from, Date to) {
         ArrayList<RequestForLeave> leaves = new ArrayList<>();
 
-        // Câu truy vấn lấy các đơn đã Approved của nhân viên trong phòng ban
-        // trong khoảng thời gian xác định
         String sql = """
                  SELECT r.* FROM RequestForLeave r
                  INNER JOIN Employee e ON r.created_by = e.eid
                  WHERE e.did = ? 
-                 AND r.status = 2 -- APPROVED
+                 AND r.status = 2 
                  AND r.[from] <= ? AND r.[to] >= ?""";
 
         try {
@@ -177,7 +160,7 @@ public class RequestForLeaveDBContext extends DBContext<RequestForLeave> {
                 RequestForLeave r = new RequestForLeave();
                 r.setFromDate(rs.getDate("from"));
                 r.setToDate(rs.getDate("to"));
-                r.setCreatedBy(empDB.getEmployeeFullInfo(rs.getInt("created_by")));
+                r.setCreatedBy(empDB.get(rs.getInt("created_by")));
                 leaves.add(r);
             }
         } catch (SQLException ex) {

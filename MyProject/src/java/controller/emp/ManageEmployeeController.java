@@ -22,23 +22,19 @@ public class ManageEmployeeController extends HttpServlet {
         HttpSession session = req.getSession();
         User currentUser = (User) session.getAttribute("auth");
 
-        // Nếu chưa đăng nhập → chuyển về trang login
         if (currentUser == null) {
             resp.sendRedirect(req.getContextPath() + "/index.html");
             return;
         }
 
-        // Khai báo DBContext
         EmployeeDBContext empDB = new EmployeeDBContext();
         RoleDBContext roleDB = new RoleDBContext();
 
         ArrayList<Employee> employees;
 
-        // ✅ Giám đốc → xem tất cả
         if (isDirector(currentUser)) {
             employees = empDB.listAll();
         } 
-        // ✅ Quản lý → chỉ xem nhân viên trong phòng ban
         else {
             int deptId = currentUser.getEmployee().getDept().getId();
             employees = empDB.listByDivision(deptId);
@@ -46,7 +42,6 @@ public class ManageEmployeeController extends HttpServlet {
 
         ArrayList<Role> roles = roleDB.list();
 
-        // Đưa dữ liệu sang JSP
         req.setAttribute("employees", employees);
         req.setAttribute("roles", roles);
 
@@ -65,13 +60,11 @@ public class ManageEmployeeController extends HttpServlet {
             return;
         }
 
-        // Lấy dữ liệu từ form
-        int uid = Integer.parseInt(req.getParameter("uid"));
-        int newRoleId = Integer.parseInt(req.getParameter("newRoleId"));
-
         UserDBContext userDB = new UserDBContext();
-
-        // ✅ Nếu không phải giám đốc → chỉ được đổi trong cùng phòng ban
+        
+        String action = req.getParameter("action");
+        int uid = Integer.parseInt(req.getParameter("uid"));
+        
         if (!isDirector(currentUser)) {
             int currentDept = currentUser.getEmployee().getDept().getId();
             int targetDept = userDB.getDivisionIdByUser(uid);
@@ -82,15 +75,24 @@ public class ManageEmployeeController extends HttpServlet {
                 return;
             }
         }
+        
+        if ("promote".equals(action)) {
+            int newRoleId = Integer.parseInt(req.getParameter("newRoleId"));
+            userDB.updateUserRole(uid, newRoleId);
+            req.setAttribute("message", "✅ Cập nhật chức vụ thành công!");
+        } else if ("deactivate".equals(action)) {
+            userDB.deactivateEmployee(uid, false);
+            req.setAttribute("message", "✅ Sa thải nhân viên thành công. Tài khoản đã bị vô hiệu hóa!");
+        } else if ("activate".equals(action)) {
+            userDB.deactivateEmployee(uid, true);
+            req.setAttribute("message", "✅ Kích hoạt lại tài khoản thành công!");
+        } else {
+            req.setAttribute("error", "Hành động không hợp lệ.");
+        }
 
-        // ✅ Cập nhật chức vụ
-        userDB.updateUserRole(uid, newRoleId);
-
-        req.setAttribute("message", "✅ Cập nhật chức vụ thành công!");
         doGet(req, resp);
     }
 
-    // ✅ Hàm kiểm tra xem user có phải giám đốc không
     private boolean isDirector(User user) {
         return user.getRoles().stream().anyMatch(r -> r.getId() == 1);
     }

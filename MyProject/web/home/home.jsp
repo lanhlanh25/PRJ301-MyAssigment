@@ -111,7 +111,6 @@
 
     <div class="container">
 
-        <!-- Account Info -->
         <div class="account-box">
             <div class="avatar">
                 <img src="${pageContext.request.contextPath}/images/user.png" alt="Avatar">
@@ -126,12 +125,10 @@
             </div>
         </div>
 
-        <!-- Header -->
         <div class="header-info">
             <h2>🏢 Trang Chủ eLeave</h2>
         </div>
 
-        <!-- Menu -->
         <ul class="menu-bar">
             <li><a href="${pageContext.request.contextPath}/home">Trang Chủ</a></li>
 
@@ -147,13 +144,13 @@
                 <li><a href="${pageContext.request.contextPath}/division/agenda">📊 Tình Hình Lao Động</a></li>
             </c:if>
 
-            <!-- ✅ Mục mới: Quản lý nhân viên -->
             <c:if test="${user.authorizedFeatures['/employee/manage']}">
                 <li><a href="${pageContext.request.contextPath}/employee/manage">👔 Quản Lý Nhân Viên</a></li>
             </c:if>
+            
+        
         </ul>
 
-        <!-- Main content -->
         <div class="content">
             <h1>Chào mừng bạn trở lại, ${user.displayname}!</h1>
             <p>Bạn đã đăng nhập thành công. Các chức năng bạn có quyền sẽ hiển thị trên thanh menu phía trên.</p>

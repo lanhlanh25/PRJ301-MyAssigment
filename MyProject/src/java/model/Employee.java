@@ -1,14 +1,13 @@
 package model;
 
-/**
- *
- * @author sonnt
- */
+import model.iam.User;
+
 public class Employee extends BaseModel {
     private String name;
-    // THAY THẾ Department bằng Division
     private Division dept; 
     private Employee supervisor;
+    private User user;
+    private boolean active;
 
     public String getName() {
         return name;
@@ -18,12 +17,10 @@ public class Employee extends BaseModel {
         this.name = name;
     }
 
-    // THAY THẾ Department bằng Division
     public Division getDept() {
         return dept;
     }
 
-    // THAY THẾ Department bằng Division
     public void setDept(Division dept) {
         this.dept = dept;
     }
@@ -35,5 +32,20 @@ public class Employee extends BaseModel {
     public void setSupervisor(Employee supervisor) {
         this.supervisor = supervisor;
     }
-    
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
 }
